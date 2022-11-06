@@ -1,0 +1,3 @@
+11/06/2022
+
+-Bot is live on Heroku, had to wrestle with it for a while but it seems to working now. Procfile for discord bots have to be "worker" not "web" and you have allow network access from anywhere to access your MongoDB database. MongoDB Atlas -> NetworkAccess -> Edit -> Allow Any.
