@@ -6,7 +6,7 @@ require('dotenv').config()
 mongoose.connect(process.env.MONGO_KEY)
 
 
-const { Client, Intents, GatewayIntentBits } = require('discord.js');
+const { Client, Intents, GatewayIntentBits, EmbedBuilder } = require('discord.js');
 
 
 
@@ -67,8 +67,19 @@ client.on('messageCreate', async (message) => {
         const res = await axios.get(`https://www.omdbapi.com/?t=${rec}&apikey=272fc884`)
         console.log(res.data)
 
+        const movieEmbed = new EmbedBuilder()
+        .setColor(0x20124D)
+        .setTitle(rec)
+        .setDescription(res.data.Plot)
+        .setImage(res.data.Poster)
+        .addFields(
+          { name: 'Year', value: res.data.Year, inline: true },
+          { name: 'Director', value: res.data.Director, inline: true },
+          { name: 'Language', value: res.data.Language, inline: true }
+        )
 
-        message.channel.send({content: rec, files: [res.data.Poster]})
+          message.channel.send({embeds: [movieEmbed]})
+        // message.channel.send({content: `**__${rec}__** (${res.data.Year})\n\n${res.data.Plot}`, files: [res.data.Poster], })
             
           
     
