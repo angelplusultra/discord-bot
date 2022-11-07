@@ -1,5 +1,6 @@
 const mongoose = require('mongoose');
 const Movie = require('./db')
+const axios = require('axios')
 require('dotenv').config()
 
 mongoose.connect(process.env.MONGO_KEY)
@@ -61,9 +62,13 @@ client.on('messageCreate', async (message) => {
       }
       if(command.includes('getrec')){
         const movies = await Movie.find()
-        console.log(movies)
+        
+        const rec = movies[Math.floor(Math.random() * movies.length)].title
+        const res = await axios.get(`https://www.omdbapi.com/?t=${rec}&apikey=272fc884`)
+        console.log(res.data)
 
-        message.channel.send(movies[Math.floor(Math.random() * movies.length)].title)
+
+        message.channel.send({content: rec, files: [res.data.Poster]})
             
           
     
