@@ -5,7 +5,7 @@ require("dotenv").config();
 
 mongoose.connect(process.env.MONGO_KEY);
 
-const {
+const { 
   Client,
   Intents,
   GatewayIntentBits,
@@ -37,6 +37,10 @@ client.on("messageCreate", async (message) => {
   const argument = messageArray.slice(1);
   const cmd = messageArray[0];
 
+
+
+
+  // Deprecated format to add movie to DB
   if (command.includes("sendmovie")) {
     const movieRec = message.content
       .substring(11)
@@ -47,6 +51,10 @@ client.on("messageCreate", async (message) => {
     await movie.save();
     message.reply(`${movieRec} has been added to the list`);
   }
+
+
+
+  // Delete movie from the DB
   if (command.includes("deletemovie")) {
     const movieQuery = message.content
       .substring(13)
@@ -66,7 +74,7 @@ client.on("messageCreate", async (message) => {
     });
   }
 
-  // <sendreclink! Movie Title !Movie Link
+  // add a movie to the DB w/ movie link
   if (command.includes("sendreclink!")) {
     const arr = message.content.split("!");
     console.log(arr[1], arr[2]);
@@ -84,6 +92,13 @@ client.on("messageCreate", async (message) => {
       message.reply(`${movieTitle} is already on the list`);
     }
   }
+
+
+
+
+
+
+  // Getr a movie recomendation
   if (command.includes("getrec")) {
     const movies = await Movie.find();
     const { title, link } = movies[Math.floor(Math.random() * movies.length)];
@@ -115,6 +130,13 @@ client.on("messageCreate", async (message) => {
     );
     message.channel.send(list);
   }
+
+
+
+
+
+
+  // Search for a movie
   if (command.includes("searchmovie")) {
     const movieQuery = message.content
       .substring(13)
@@ -145,6 +167,29 @@ client.on("messageCreate", async (message) => {
       console.log(error);
       message.channel.send(`Could not find __**${movieQuery}**__ in the list`);
     }
+  }
+
+
+
+
+
+
+
+
+
+
+  // Get the count of movies in th DB
+  if(command.includes('moviecount')){
+    try {
+      const count = await Movie.countDocuments()
+      message.reply(count.toString())
+      
+    } catch (error) {
+      console.log(error)
+      
+    }
+
+    
   }
 
 });
