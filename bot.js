@@ -1,11 +1,12 @@
 const mongoose = require("mongoose");
 const Movie = require("./db");
 const axios = require("axios");
+const titleCase = require("./methods");
 require("dotenv").config();
 
 mongoose.connect(process.env.MONGO_KEY);
 
-const { 
+const {
   Client,
   Intents,
   GatewayIntentBits,
@@ -37,9 +38,6 @@ client.on("messageCreate", async (message) => {
   const argument = messageArray.slice(1);
   const cmd = messageArray[0];
 
-
-
-
   // Deprecated format to add movie to DB
   if (command.includes("sendmovie")) {
     const movieRec = message.content
@@ -51,8 +49,6 @@ client.on("messageCreate", async (message) => {
     await movie.save();
     message.reply(`${movieRec} has been added to the list`);
   }
-
-
 
   // Delete movie from the DB
   if (command.includes("deletemovie")) {
@@ -93,10 +89,45 @@ client.on("messageCreate", async (message) => {
     }
   }
 
+  // Get five random movies
+  if (command.includes("getfive")) {
+    try {
+      const movies = await Movie.find();
 
+      Array(5)
+        .fill()
+        .forEach(async (loop) => {
+          const { title, link } =
+            movies[Math.floor(Math.random() * movies.length)];
+          const res = await axios.get(
+            `https://www.omdbapi.com/?t=${title}&apikey=272fc884`
+          );
+          const movieEmbed = new EmbedBuilder()
+            .setColor(0x20124d)
+            .setTitle(title || "N/A")
+            .setDescription(res.data.Plot || "N/A")
+            .setImage(res.data.Poster || null)
+            .addFields(
+              { name: "Year", value: res.data.Year || "N/A", inline: true },
+              {
+                name: "Director",
+                value: res.data.Director || "N/A",
+                inline: true,
+              },
+              {
+                name: "Language",
+                value: res.data.Language || "N/A",
+                inline: true,
+              }
+            )
+            .setURL(link || null);
 
-
-
+          message.channel.send({ embeds: [movieEmbed] });
+        });
+    } catch (error) {
+      console.log(error);
+    }
+  }
 
   // Getr a movie recomendation
   if (command.includes("getrec")) {
@@ -122,19 +153,16 @@ client.on("messageCreate", async (message) => {
     message.channel.send({ embeds: [movieEmbed] });
   }
   if (command.includes("getallmovies")) {
-    let list = ''
+    let list = "";
     //this algo sorts the list alphabetically by title
-    const movies = await Movie.find().collation({locale: 'en', strength: 2}).sort({title: 1});
+    const movies = await Movie.find()
+      .collation({ locale: "en", strength: 2 })
+      .sort({ title: 1 });
     movies.forEach(
       (movie) => (list += movie.title + "\n" + "Link: " + movie.link + "\n\n")
     );
     message.channel.send(list);
   }
-
-
-
-
-
 
   // Search for a movie
   if (command.includes("searchmovie")) {
@@ -162,36 +190,53 @@ client.on("messageCreate", async (message) => {
         .setURL(movie[0].link || null);
 
       message.channel.send({ embeds: [movieEmbed] });
-     
     } catch (error) {
       console.log(error);
       message.channel.send(`Could not find __**${movieQuery}**__ in the list`);
     }
   }
 
-
-
-
-
-
-
-
-
-
   // Get the count of movies in th DB
-  if(command.includes('moviecount')){
+  if (command.includes("moviecount")) {
     try {
-      const count = await Movie.countDocuments()
-      message.reply(count.toString())
-      
+      const count = await Movie.countDocuments();
+      message.reply(count.toString());
     } catch (error) {
-      console.log(error)
-      
+      console.log(error);
     }
-
-    
   }
-
+// Update link 
+  if (command.includes("updatelink!")) {
+    const arr = message.content.split("!");
+    console.log(arr[1], arr[2]);
+    const movieTitle = titleCase(arr[1]);
+    try {
+      const movies = await Movie.findOneAndUpdate(
+        { title: movieTitle },
+        { link: arr[2] }
+      );
+      message.reply(`The link for __**${movieTitle}**__ has been updated`);
+    } catch (error) {
+      console.log(error);
+    }
+  }
+  //Update title
+  if (command.includes("updatetitle!")) {
+    const arr = message.content.split("!");
+    const movieQuery = titleCase(arr[1]);
+    const titleUpdate = titleCase(arr[2]);
+    try {
+      const movies = await Movie.findOneAndUpdate(
+        { title: movieQuery },
+        { title: titleUpdate }
+      );
+      message.reply(
+        `The title for __**${movieQuery}**__ has been updated to __**${titleUpdate}**__`
+      );
+    } catch (error) {
+      console.log(error);
+    }
+  }
 });
 
 client.login(process.env.BOT_TOKEN);
