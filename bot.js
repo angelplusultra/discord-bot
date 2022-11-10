@@ -171,6 +171,7 @@ client.on("messageCreate", async (message) => {
       .split(" ")
       .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
       .join(" ");
+      console.log(movieQuery)
     try {
       const movie = await Movie.find({ title: movieQuery });
       const res = await axios.get(
@@ -179,13 +180,13 @@ client.on("messageCreate", async (message) => {
 
       const movieEmbed = new EmbedBuilder()
         .setColor(0x20124d)
-        .setTitle(movie[0].title)
-        .setDescription(res.data.Plot)
-        .setImage(res.data.Poster)
+        .setTitle(movie[0].title || "N/A")
+        .setDescription(res.data.Plot || "N/A")
+        .setImage(res.data.Poster || null)
         .addFields(
-          { name: "Year", value: res.data.Year, inline: true },
-          { name: "Director", value: res.data.Director, inline: true },
-          { name: "Language", value: res.data.Language, inline: true }
+          { name: "Year", value: res.data.Year || "N/A", inline: true },
+          { name: "Director", value: res.data.Director || "N/A", inline: true },
+          { name: "Language", value: res.data.Language || "N/A", inline: true }
         )
         .setURL(movie[0].link || null);
 

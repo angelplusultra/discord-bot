@@ -1,3 +1,9 @@
 11/06/2022
 
 -Bot is live on Heroku, had to wrestle with it for a while but it seems to working now. Procfile for discord bots have to be "worker" not "web" and you have allow network access from anywhere to access your MongoDB database. MongoDB Atlas -> NetworkAccess -> Edit -> Allow Any.
+
+
+
+11/9/2022 
+
+Make sure to implement an add movie feature including a year! too many mvoies are getting incorrect posters. eg http://www.omdbapi.com/?t=blue+&y=2002
