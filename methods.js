@@ -3,7 +3,6 @@ function titleCase(arr){
 
 } 
 
-
 const movieQuery = (string, substr) => {
    return string
       .substring(substr)
@@ -12,8 +11,13 @@ const movieQuery = (string, substr) => {
       .join(" ");
 
 }
+function getMinutesBetweenDates(startDate, endDate) {
+   var diff = endDate.getTime() - startDate.getTime();
+   return (diff / 60000);
+}
 
 module.exports = {
    titleCase: titleCase,
-   querySplitter: movieQuery
+   querySplitter: movieQuery,
+   getMinutesBetweenDates: getMinutesBetweenDates
 } 

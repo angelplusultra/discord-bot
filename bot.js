@@ -1,23 +1,19 @@
 //Imports
-const mongoose = require("mongoose");
-const Movie = require("./models/Movie");
-const axios = require("axios");
 const connectDB = require("./config/db");
-const { titleCase, querySplitter } = require("./methods");
-const {
-  Client,
-  GatewayIntentBits,
-  EmbedBuilder,
-  CommandInteractionOptionResolver,
-} = require("discord.js");
+const {Client, GatewayIntentBits} = require("discord.js");
 const botController = require("./controllers/botcontrollers");
 require("dotenv").config({ path: "./config/.env" });
+const moment = require('moment'); // require
+moment().format(); 
+
 
 // DB Connection
 connectDB();
 
 //Prefix Config
 const prefix = "<";
+
+// Client instantiation and Permission Grants
 const client = new Client({
   intents: [
     GatewayIntentBits.Guilds,
@@ -27,14 +23,19 @@ const client = new Client({
   ],
 });
 
+
+
+
+
 // Bot on Ready
 client.on("ready", async () => {
   console.log("Bot is Ready");
   client.user.setActivity("Eddie is a faggot", { type: "WATCHING" });
 });
 
-// Bot Routes
-client.on("messageCreate",  (message) => {
+
+// Bot on Message Creation
+client.on("messageCreate", (message) => {
   // if(!message.content.startsWith(prefix) || message.author.bot) return;
 
 
@@ -85,6 +86,15 @@ client.on("messageCreate",  (message) => {
   //Update title
   if (command.includes("updatetitle!")) {
     botController.updateTitle(message);
+  }
+  if(command.includes('enrollstudent')){
+    botController.enrollStudent(message)
+  }
+  if(command.includes('checkin')){
+    botController.checkIn(message)
+  }
+  if(command.includes('checkout')){
+    botController.checkOut(message)
   }
 });
 
