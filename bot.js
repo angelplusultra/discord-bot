@@ -1,16 +1,22 @@
-//Imports 
+//Imports
 const mongoose = require("mongoose");
 const Movie = require("./models/Movie");
 const axios = require("axios");
-const connectDB = require('./config/db')
-const {titleCase, querySplitter} = require("./methods");
-const { Client,  GatewayIntentBits, EmbedBuilder} = require("discord.js");
-require("dotenv").config({path: './config/.env'});
+const connectDB = require("./config/db");
+const { titleCase, querySplitter } = require("./methods");
+const {
+  Client,
+  GatewayIntentBits,
+  EmbedBuilder,
+  CommandInteractionOptionResolver,
+} = require("discord.js");
+const botController = require("./controllers/botcontrollers");
+require("dotenv").config({ path: "./config/.env" });
 
 // DB Connection
-connectDB()
+connectDB();
 
-//Prefix Config 
+//Prefix Config
 const prefix = "<";
 const client = new Client({
   intents: [
@@ -21,208 +27,65 @@ const client = new Client({
   ],
 });
 
-
 // Bot on Ready
 client.on("ready", async () => {
   console.log("Bot is Ready");
   client.user.setActivity("Eddie is a faggot", { type: "WATCHING" });
 });
 
-
-// Bot Controllers
-client.on("messageCreate", async (message) => {
+// Bot Routes
+client.on("messageCreate",  (message) => {
   // if(!message.content.startsWith(prefix) || message.author.bot) return;
 
+
+  //Logic to obtain the command
   const args = message.content.slice(prefix.length).split(/ +/);
   const command = args.shift().toLowerCase();
 
-  // const messageArray = message.content.split(" ");
-  // const argument = messageArray.slice(1);
-  // const cmd = messageArray[0];
 
-  // Deprecated format to add movie to DB
-  if (command.includes("sendmovie")) {
-    const movieRec = querySplitter(message.content, 11)
-    const movie = new Movie({ title: movieRec });
-    await movie.save();
-    message.reply(`${movieRec} has been added to the list`);
-  }
 
+  // Routes
   // Delete movie from the DB
   if (command.includes("deletemovie")) {
-    const movieQuery = querySplitter(message.content, 13)
-
-    Movie.findOneAndDelete({ title: movieQuery }, (err, docs) => {
-      if (err) {
-        console.log(err);
-      } else if (!docs) {
-        message.reply(`${movieQuery} does not exist in the list`);
-        console.log("Deleted Movie : ", docs);
-      } else {
-        message.reply(`${movieQuery} has been deleted from the list`);
-      }
-    });
+    botController.deleteMovie(message);
   }
 
   // add a movie to the DB w/ movie link
   if (command.includes("sendreclink!")) {
-    const arr = message.content.split("!");
-    console.log(arr[1], arr[2]);
-    const movieTitle = arr[1]
-      .trim()
-      .split(" ")
-      .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
-      .join(" ");
-    const movie = new Movie({ title: movieTitle, link: arr[2] });
-    try {
-      await movie.save();
-      message.reply(`${movieTitle} has been added to the list`);
-    } catch (error) {
-      console.log(error);
-      message.reply(`${movieTitle} is already on the list`);
-    }
+    botController.addMovie(message);
   }
 
   // Get five random movies
   if (command.includes("getfive")) {
-    try {
-      const movies = await Movie.find();
-
-      Array(5)
-        .fill()
-        .forEach(async (loop) => {
-          const { title, link } =
-            movies[Math.floor(Math.random() * movies.length)];
-          const res = await axios.get(
-            `https://www.omdbapi.com/?t=${title}&apikey=272fc884`
-          );
-          
-          const movieEmbed = new EmbedBuilder()
-          .setColor(0x20124d)
-          .setTitle(title || "N/A")
-          .setDescription(res.data.Plot || "N/A")
-          .setImage(res.data.Poster || null)
-          .addFields(
-            { name: "Year", value: res.data.Year || "N/A", inline: true },
-            { name: "Director", value: res.data.Director || "N/A", inline: true },
-            { name: "Language", value: res.data.Language || "N/A", inline: true },
-            { name: "Runtime", value: res.data.Runtime || "N/A", inline: true }
-          )
-          .setURL(link || null);
-
-          message.channel.send({ embeds: [movieEmbed] });
-        });
-    } catch (error) {
-      console.log(error);
-    }
+    botController.getFive(message);
   }
 
   // Get a movie recomendation
   if (command.includes("getrec")) {
-    const movies = await Movie.find();
-    const { title, link } = movies[Math.floor(Math.random() * movies.length)];
-    const res = await axios.get(
-      `https://www.omdbapi.com/?t=${title}&apikey=272fc884`
-    );
-    console.log(res.data);
-
-    const movieEmbed = new EmbedBuilder()
-        .setColor(0x20124d)
-        .setTitle(title || "N/A")
-        .setDescription(res.data.Plot || "N/A")
-        .setImage(res.data.Poster || null)
-        .addFields(
-          { name: "Year", value: res.data.Year || "N/A", inline: true },
-          { name: "Director", value: res.data.Director || "N/A", inline: true },
-          { name: "Language", value: res.data.Language || "N/A", inline: true },
-          { name: "Runtime", value: res.data.Runtime || "N/A", inline: true }
-        )
-        .setURL(link || null);
-
-    message.channel.send({ embeds: [movieEmbed] });
+    botController.getMovie(message);
   }
   if (command.includes("getallmovies")) {
-    
-    
-    message.channel.send('https://movie-emporium.onrender.com');
+    message.channel.send("https://movie-emporium.onrender.com");
   }
 
   // Search for a movie
   if (command.includes("searchmovie")) {
-    const movieQuery = querySplitter(message.content, 13)
-      console.log(movieQuery)
-    try {
-      const movie = await Movie.find({ title: movieQuery });
-      const res = await axios.get(
-        `https://www.omdbapi.com/?t=${movie[0].title}&apikey=272fc884`
-      );
-      console.log(res.data)
-      const movieEmbed = new EmbedBuilder()
-        .setColor(0x20124d)
-        .setTitle(movie[0].title || "N/A")
-        .setDescription(res.data.Plot || "N/A")
-        .setImage(res.data.Poster || null)
-        .addFields(
-          { name: "Year", value: res.data.Year || "N/A", inline: true },
-          { name: "Director", value: res.data.Director || "N/A", inline: true },
-          { name: "Language", value: res.data.Language || "N/A", inline: true },
-          { name: "Runtime", value: res.data.Runtime || "N/A", inline: true }
-        )
-        .setURL(movie[0].link || null);
-
-
-        
-      message.channel.send({ embeds: [movieEmbed] });
-    } catch (error) {
-      console.log(error);
-      message.channel.send(`Could not find __**${movieQuery}**__ in the list`);
-    }
+    botController.searchMovie(message);
   }
 
   // Get the count of movies in th DB
   if (command.includes("moviecount")) {
-    try {
-      const count = await Movie.countDocuments();
-      message.reply(count.toString());
-    } catch (error) {
-      console.log(error);
-    }
+    botController.countMovies(message);
   }
-// Update link 
+  // Update link
   if (command.includes("updatelink!")) {
-    const arr = message.content.split("!");
-    console.log(arr[1], arr[2]);
-    const movieTitle = titleCase(arr[1]);
-    try {
-      const movies = await Movie.findOneAndUpdate(
-        { title: movieTitle },
-        { link: arr[2] }
-      );
-      message.reply(`The link for __**${movieTitle}**__ has been updated`);
-    } catch (error) {
-      console.log(error);
-    }
+    botController.updateLink(message);
   }
+
   //Update title
   if (command.includes("updatetitle!")) {
-    const arr = message.content.split("!");
-    const movieQuery = titleCase(arr[1]);
-    const titleUpdate = titleCase(arr[2]);
-    try {
-      const movies = await Movie.findOneAndUpdate(
-        { title: movieQuery },
-        { title: titleUpdate }
-      );
-      message.reply(
-        `The title for __**${movieQuery}**__ has been updated to __**${titleUpdate}**__`
-      );
-    } catch (error) {
-      console.log(error);
-    }
+    botController.updateTitle(message);
   }
-
-  
-
 });
 
 client.login(process.env.BOT_TOKEN);
