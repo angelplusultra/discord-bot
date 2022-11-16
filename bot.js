@@ -4,7 +4,7 @@ const {Client, GatewayIntentBits} = require("discord.js");
 const botController = require("./controllers/botcontrollers");
 require("dotenv").config({ path: "./config/.env" });
 const moment = require('moment'); // require
-moment().format(); 
+
 
 
 // DB Connection

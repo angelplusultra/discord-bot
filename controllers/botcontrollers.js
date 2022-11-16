@@ -8,7 +8,7 @@ const {
 } = require("../methods");
 const axios = require("axios");
 const { EmbedBuilder } = require("discord.js");
-const moment = require("moment"); // require
+const moment = require("moment-timezone"); // require
 moment().format();
 
 module.exports = {
@@ -230,20 +230,20 @@ module.exports = {
       }
       result.$set({ checkOutTime: new Date() });
       console.log(
-        `${result.firstName}'s Check-out time is at ${result.checkOutTime}`
+        `${result.firstName}'s Check-out time is at ${moment.tz(result.checkOutTime, "America/Los_Angeles").format("h:mm a")}`
       );
       if (getMinutesBetweenDates(result.checkInTime, result.checkOutTime) >= 30) {
         const totalTime = Math.floor(getMinutesBetweenDates(result.checkInTime, result.checkOutTime));
 
         result.$inc("bananaCount", 1);
 
-        message.reply(`__**Check-in Time:**__ ${moment(result.checkInTime).format("h:mm a")}\n__**Check-out Time:**__ ${moment(result.checkOutTime).format("h:mm a")}\nYou were in class for ${Math.floor(totalTime)} minutes.\nYou earned a 🍌!\nYour total bananas: ${result.bananaCount}`);
+        message.reply(`__**Check-in Time:**__ ${moment.tz(res.checkInTime, "America/Los_Angeles").format("h:mm a")}\n__**Check-out Time:**__ ${moment.tz(res.checkOutTime, "America/Los_Angeles").format("h:mm a")}\nYou were in class for ${Math.floor(totalTime)} minutes.\nYou earned a 🍌!\nYour total bananas: ${result.bananaCount}`);
 
         result.$set({ checkOutTime: null, checkInTime: null });
         result.save();
       } else {
         const totalTime = Math.floor(getMinutesBetweenDates(result.checkInTime, result.checkOutTime));
-        message.reply(`__**Check-in Time:**__ ${moment(result.checkInTime).format("h:mm a")}\n__**Check-out Time:**__ ${moment(result.checkOutTime).format("h:mm a")}\nYou were in class for ${Math.floor(totalTime)} minutes.\nYou weren't in class long enough to earn a banana 😢 💔`);
+        message.reply(`__**Check-in Time:**__ ${moment.tz(result.checkInTime, "America/Los_Angeles").format("h:mm a")}\n__**Check-out Time:**__ ${moment.tz(result.checkOutTime, "America/Los_Angeles").format("h:mm a")}\nYou were in class for ${Math.floor(totalTime)} minutes.\nYou weren't in class long enough to earn a banana 😢 💔`);
 
 
         result.$set({ checkOutTime: null, checkInTime: null });
@@ -265,8 +265,8 @@ module.exports = {
         { checkInTime: new Date() },
         { new: true }
       );
-      console.log(`${res.firstName}'s Check-in time is at ${moment(res.checkInTime).format("hh:mm a")}`);
-      message.reply(`${message.author} has checked in at ${moment(res.checkInTime).format("h:mm a")}!`);
+      console.log(`${res.firstName}'s Check-in time is at ${moment.tz(res.checkInTime, "America/Los_Angeles").format("h:mm a")}`);
+      message.reply(`${message.author} has checked in at ${moment.tz(res.checkInTime, "America/Los_Angeles").format("h:mm a")}!`);
     } catch (error) {
       console.log(error);
     }
